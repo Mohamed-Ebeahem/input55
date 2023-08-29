@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>  </title>
+</head>
+<body>
+    
+    <input type="text" id="arabicInput">
+    
+
+    
+<script>
+
+
+
+
+var arabicInput = document.getElementById("arabicInput");
+
+arabicInput.addEventListener("input", function() {
+    var userInput = arabicInput.value;
+    arabicInput.value = sanitizeInput(userInput);
+});
+
+arabicInput.addEventListener("keydown", function(event) {
+    var key = event.key.toLowerCase();
+    var inputValue = arabicInput.value.toLowerCase();
+
+    if (isEnglishCharacter(key) && key !== 'q' && key !== 'backspace') {
+        if (inputValue.indexOf('ى') !== -1) {
+            event.preventDefault();
+        }
+    } else if (isSpecialCharacter(key) && key !== '<' && key !== '>' && key !== '/' && key !== ' ') {
+        event.preventDefault();
+    }
+
+    var isTashkeel = /[\u064B-\u0651]/.test(key); 
+    var isSukun = (key === '\u0652'); 
+
+    if (isSukun && inputValue.endsWith('\u0651')) {
+        event.preventDefault(); 
+    }
+});
+
+function isEnglishCharacter(char) {
+    var englishRegex = /[a-zA-Z]/;
+    return englishRegex.test(char);
+}
+
+function isSpecialCharacter(char) {
+    var specialRegex = /[!@#$%^&*()_+={}\[\]:;"'\\|<>,.?/~`\\-]/;
+    return specialRegex.test(char);
+}
+
+function sanitizeInput(inputText) {
+    var sanitizedText = '';
+    var tashkeelCount = 0;
+    var hasShadda = false;
+    var lastCharWasTashkeel = false;
+
+    for (var i = 0; i < inputText.length; i++) {
+        var char = inputText[i];
+        var isTashkeel = /[\u064B-\u0652]/.test(char);
+        var isShadda = (char === '\u0651');
+        var isSukun = (char === '\u0652');
+
+        if (isEnglishCharacter(char) && char !== 'q') {
+            continue;
+        }
+
+        if (isSukun && (isTashkeel || isShadda)) {
+            event.preventDefault();
+        }
+
+        if (isTashkeel && lastCharWasTashkeel && !hasShadda) {
+            continue;
+        }
+
+        if (isTashkeel && char === '\u064E' && inputText[i - 1] === '\u064E') {
+            continue;
+        }
+
+        if (isTashkeel && tashkeelCount >= 2) {
+            continue;
+        }
+
+        if (isShadda && hasShadda) {
+            continue;
+        }
+
+        if (isSukun && hasShadda) {
+            continue; 
+        }
+
+        if (isTashkeel) {
+            hasShadda = true; 
+        }
+
+        sanitizedText += char;
+
+        if (isTashkeel) {
+            tashkeelCount++;
+            lastCharWasTashkeel = true;
+            if (isShadda) {
+                hasShadda = true;
+            } else {
+                hasShadda = false;
+            }
+        } else {
+            tashkeelCount = 0;
+            lastCharWasTashkeel = false;
+        }
+    }
+
+    return sanitizedText;
+}
+
+
+
+</script>
+</body>
+</html> 
+
+
+
